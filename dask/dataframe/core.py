@@ -1,20 +1,16 @@
 from __future__ import division
 
 from itertools import count
-from math import ceil, sqrt
+from math import sqrt
 from functools import wraps
 import bisect
-import os
-from toolz import (merge, partial, accumulate, unique, first, dissoc, valmap,
-        first, partition)
+from toolz import merge, partial, first, partition, curry
 from operator import getitem, setitem
 from datetime import datetime
 import pandas as pd
 import numpy as np
 import operator
-import gzip
-import bz2
-import bcolz
+
 try:
     from chest import Chest as Cache
 except ImportError:
@@ -23,7 +19,6 @@ except ImportError:
 from .. import array as da
 from .. import core
 from ..array.core import partial_by_order
-from .. import  async
 from .. import threaded
 from ..compatibility import unicode, apply
 from ..utils import repr_long_list, IndexCallable, pseudorandom
@@ -314,6 +309,10 @@ class Series(_Frame):
             return Series(merge(self.dask, key.dask, dsk), name,
                           self.name, self.divisions)
         raise NotImplementedError()
+
+    def nlargest(self, n):
+        func = curry(pd.Series.nlargest, n=n)
+        return aca(self, chunk=func, aggregate=func, columns=self.columns)
 
     def __abs__(self):
         return elemwise(operator.abs, self)

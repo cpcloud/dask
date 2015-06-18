@@ -422,3 +422,11 @@ def test_dataframe_groupby_nunique_across_group_same_value():
     expected = ps.groupby('strings')['data'].nunique()
     result = s.groupby('strings')['data'].nunique().compute()
     tm.assert_series_equal(result, expected)
+
+
+def test_series_nlargest():
+    n = 3
+    s = pd.Series(np.random.randn(10))
+    ds = dd.from_pandas(s, npartitions=4)
+    import dask
+    tm.assert_series_equal(s.nlargest(n), ds.nlargest(n).compute(get=dask.async.get_sync))
