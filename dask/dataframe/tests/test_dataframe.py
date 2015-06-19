@@ -428,5 +428,17 @@ def test_series_nlargest():
     n = 3
     s = pd.Series(np.random.randn(10))
     ds = dd.from_pandas(s, npartitions=4)
+    tm.assert_series_equal(s.nlargest(n), ds.nlargest(n).compute())
+
+
+def test_groupby_nlargest():
+    n = 3
+    strings = list('aaabbccccdddeee')
+    data = list(map(int, '123111223323412'))
+    df = pd.DataFrame(dict(data=data, strings=strings))
+    expected = df.groupby(df.strings).data.nlargest(n)
+
+    ddf = dd.from_pandas(df, npartitions=3)
     import dask
-    tm.assert_series_equal(s.nlargest(n), ds.nlargest(n).compute(get=dask.async.get_sync))
+    result = ddf.groupby(ddf.strings).data.nlargest(n).compute(get=dask.async.get_sync)
+    tm.assert_series_equal(result, expected)
