@@ -777,6 +777,20 @@ class SeriesGroupBy(object):
         return aca([self.frame, self.index],
                    chunk=chunk, aggregate=agg, columns=[self.key])
 
+    def nlargest(self, n):
+        def chunk(df, index):
+            result = df.groupby(index)[self.key].nlargest(n)
+            result.name = self.key
+            return result.reset_index(level=index.name).set_index(index.name)
+
+        def agg(df):
+            result = df.groupby(level=0)[self.key].nlargest(n)
+            result.name = self.key
+            return result
+
+        return aca([self.frame, self.index],
+                   chunk=chunk, aggregate=agg, columns=[self.key])
+
 
 def apply_concat_apply(args, chunk=None, aggregate=None, columns=None):
     """ Apply a function to blocks, the concat, then apply again
